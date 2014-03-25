@@ -24,7 +24,8 @@ body {
 <body>
 
 <input type="file" id="files" name="files[]"/>
-
+<br>
+<br>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
@@ -93,8 +94,8 @@ function renderFile (url) {
         var formatCount = d3.format(",.0f");
 
         var margin = {top: 30, right: 30, bottom: 30, left: 30},
-            width = 1200 - margin.left - margin.right,
-            height = 500 - margin.top - margin.bottom;
+            width = 400 - margin.left - margin.right,
+            height = 400 - margin.top - margin.bottom;
 
         var x = d3.scale.linear()
             .domain([Math.floor(d3.min(values)), Math.ceil(d3.max(values))])
