@@ -94,15 +94,18 @@ function renderFile (url) {
         var formatCount = d3.format(",.0f");
 
         var margin = {top: 30, right: 30, bottom: 30, left: 30},
-            width = 400 - margin.left - margin.right,
-            height = 400 - margin.top - margin.bottom;
-
-        var x = d3.scale.linear()
-            .domain([Math.floor(d3.min(values)), Math.ceil(d3.max(values))])
-            .range([0, width]);
+            width = 440 - margin.left - margin.right,
+            height = 440 - margin.top - margin.bottom;
 
         // Generate a histogram using twenty uniformly-spaced bins.
         var data = d3.layout.histogram()(values);
+
+        var first = data[0];
+        var last = data[data.length - 1];
+
+        var x = d3.scale.linear()
+            .domain([first.x - first.dx , last.x + last.dx])
+            .range([0, width]);
 
         var y = d3.scale.linear()
             .domain([0, d3.max(data, function(d) { return d.y; })])
