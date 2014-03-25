@@ -22,6 +22,9 @@ body {
 
 </style>
 <body>
+
+<input type="file" id="files" name="files[]"/>
+
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
@@ -33,96 +36,123 @@ function formatTitle (title) {
   return title.replace(/_/g, " ").replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); })
 }
 
-var keys = [];
+if (window.File && window.FileReader && window.FileList && window.Blob) {
+  // Great success! All the File APIs are supported.
+} else {
+  alert('The File APIs are not fully supported in this browser.');
+}
 
-d3.tsv("data.tsv", 
-  function(row) {
-    keys = Object.keys(row);
+function handleFileSelect(evt) {
+  var files = evt.target.files; 
 
-    var newRow = {};
-    keys.filter(function (key) {
-      return isNumber(row[key]);
-    }).forEach(function (key) {
-      newRow[key] = +row[key];
-    });
+  var reader = new FileReader();
 
-    return newRow;
-  }, 
+  reader.onload = function() {
+    renderFile(reader.result)
+  };
 
-  function(error, tsvRows) {
-    // For each column
-    Object.keys(tsvRows[0]).forEach(function(colName) {
-    
-      var values = tsvRows.map(function(row) {
-        return row[colName];
+  for (var i = 0, f; f = files[i]; i++) {
+      if (!f.type.match('text.*')) {
+        continue;
+      }
+      
+      reader.readAsDataURL(f);
+  };
+  
+}
+
+document.getElementById('files').addEventListener('change', handleFileSelect, false);
+
+function renderFile (url) {
+  var keys = [];
+  d3.tsv(url, 
+    function(row) {
+      keys = Object.keys(row);
+
+      var newRow = {};
+      keys.filter(function (key) {
+        return isNumber(row[key]);
+      }).forEach(function (key) {
+        newRow[key] = +row[key];
       });
 
-      var color = d3.scale.category20();
+      return newRow;
+    }, 
 
-      // A formatter for counts.
-      var formatCount = d3.format(",.0f");
+    function(error, tsvRows) {
+      // For each column
+      Object.keys(tsvRows[0]).forEach(function(colName) {
+      
+        var values = tsvRows.map(function(row) {
+          return row[colName];
+        });
 
-      var margin = {top: 30, right: 30, bottom: 30, left: 30},
-          width = 1200 - margin.left - margin.right,
-          height = 500 - margin.top - margin.bottom;
+        var color = d3.scale.category20();
 
-      var x = d3.scale.linear()
-          .domain([Math.floor(d3.min(values)), Math.ceil(d3.max(values))])
-          .range([0, width]);
+        // A formatter for counts.
+        var formatCount = d3.format(",.0f");
 
-      // Generate a histogram using twenty uniformly-spaced bins.
-      var data = d3.layout.histogram()(values);
+        var margin = {top: 30, right: 30, bottom: 30, left: 30},
+            width = 1200 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
 
-      var y = d3.scale.linear()
-          .domain([0, d3.max(data, function(d) { return d.y; })])
-          .range([height, 0]);
+        var x = d3.scale.linear()
+            .domain([Math.floor(d3.min(values)), Math.ceil(d3.max(values))])
+            .range([0, width]);
 
-      var xAxis = d3.svg.axis()
-          .scale(x)
-          .orient("bottom");
+        // Generate a histogram using twenty uniformly-spaced bins.
+        var data = d3.layout.histogram()(values);
 
-      var svg = d3.select("body").append("svg")
-          .attr("width", width + margin.left + margin.right)
-          .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        var y = d3.scale.linear()
+            .domain([0, d3.max(data, function(d) { return d.y; })])
+            .range([height, 0]);
 
-      var bar = svg.selectAll(".bar")
-          .data(data)
-        .enter().append("g")
-          .attr("class", "bar")
-          .attr("fill",function(d) { 
-            return color(d.x); 
-          })
-          .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+        var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom");
 
-      var barWidth = x(data[1].x) - x(data[0].x);
+        var svg = d3.select("body").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-      bar.append("rect")
-          .attr("x", 1)
-          .attr("width", barWidth)
-          .attr("height", function(d) { return height - y(d.y); });
+        var bar = svg.selectAll(".bar")
+            .data(data)
+          .enter().append("g")
+            .attr("class", "bar")
+            .attr("fill",function(d) { 
+              return color(d.x); 
+            })
+            .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
 
-      bar.append("text")
-          .attr("dy", ".75em")
-          .attr("y", 6)
-          .attr("x", barWidth / 2)
-          .attr("text-anchor", "middle")
-          .text(function(d) { return formatCount(d.y); });
+        var barWidth = x(data[1].x) - x(data[0].x);
 
-      svg.append("text")
-              .attr("x", (width / 2))             
-              .attr("y", 0 - (margin.top / 2))
-              .attr("text-anchor", "middle")  
-              .style("font-size", "18px") 
-              .text(formatTitle(colName));
+        bar.append("rect")
+            .attr("x", 1)
+            .attr("width", barWidth)
+            .attr("height", function(d) { return height - y(d.y); });
 
-      svg.append("g")
-          .attr("class", "x axis")
-          .attr("transform", "translate(0," + height + ")")
-          .call(xAxis);
+        bar.append("text")
+            .attr("dy", ".75em")
+            .attr("y", 6)
+            .attr("x", barWidth / 2)
+            .attr("text-anchor", "middle")
+            .text(function(d) { return formatCount(d.y); });
 
-    });
-});
+        svg.append("text")
+                .attr("x", (width / 2))             
+                .attr("y", 0 - (margin.top / 2))
+                .attr("text-anchor", "middle")  
+                .style("font-size", "18px") 
+                .text(formatTitle(colName));
 
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis);
+
+      });
+  });
+}
 </script>
