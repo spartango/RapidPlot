@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.bar rect {
+  shape-rendering: crispEdges;
+}
+
+.bar text {
+  fill: #fff;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var colName = 'nuclear_orientation_mean';
+
+function isNumber(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
+function formatTitle (title) {
+  return title.replace(/_/g, " ").replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); })
+}
+
+var keys = [];
+
+d3.tsv("data.tsv", 
+  function(row) {
+    keys = Object.keys(row);
+
+    var newRow = {};
+    keys.filter(function (key) {
+      return isNumber(row[key]);
+    }).forEach(function (key) {
+      newRow[key] = +row[key];
+    });
+
+    return newRow;
+  }, 
+
+  function(error, tsvRows) {
+    // For each column
+    Object.keys(tsvRows[0]).forEach(function(colName) {
+    
+      var values = tsvRows.map(function(row) {
+        return row[colName];
+      });
+
+      var color = d3.scale.category20();
+
+      // A formatter for counts.
+      var formatCount = d3.format(",.0f");
+
+      var margin = {top: 30, right: 30, bottom: 30, left: 30},
+          width = 1200 - margin.left - margin.right,
+          height = 500 - margin.top - margin.bottom;
+
+      var x = d3.scale.linear()
+          .domain([Math.floor(d3.min(values)), Math.ceil(d3.max(values))])
+          .range([0, width]);
+
+      // Generate a histogram using twenty uniformly-spaced bins.
+      var data = d3.layout.histogram()(values);
+
+      var y = d3.scale.linear()
+          .domain([0, d3.max(data, function(d) { return d.y; })])
+          .range([height, 0]);
+
+      var xAxis = d3.svg.axis()
+          .scale(x)
+          .orient("bottom");
+
+      var svg = d3.select("body").append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      var bar = svg.selectAll(".bar")
+          .data(data)
+        .enter().append("g")
+          .attr("class", "bar")
+          .attr("fill",function(d) { 
+            return color(d.x); 
+          })
+          .attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+
+      var barWidth = x(data[1].x) - x(data[0].x);
+
+      bar.append("rect")
+          .attr("x", 1)
+          .attr("width", barWidth)
+          .attr("height", function(d) { return height - y(d.y); });
+
+      bar.append("text")
+          .attr("dy", ".75em")
+          .attr("y", 6)
+          .attr("x", barWidth / 2)
+          .attr("text-anchor", "middle")
+          .text(function(d) { return formatCount(d.y); });
+
+      svg.append("text")
+              .attr("x", (width / 2))             
+              .attr("y", 0 - (margin.top / 2))
+              .attr("text-anchor", "middle")  
+              .style("font-size", "18px") 
+              .text(formatTitle(colName));
+
+      svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis);
+
+    });
+});
+
+</script>
