@@ -27,11 +27,12 @@ ScatterMatrix.prototype.render = function () {
 
   var container = d3.select('body').append('div')
                                    .attr('class', 'scatter-matrix-container');
-  var control = container.append('div')
-                         .attr('class', 'scatter-matrix-control');
   var svg = container.append('div')
                      .attr('class', 'scatter-matrix-svg')
-                     .html('<em>Loading data...</em>');
+                     .html('<em>Loading data...</em>');    
+  var control = container.append('div')
+                         .attr('class', 'scatter-matrix-control');
+
 
   this.onData(function() {
     var data = self.__data;
