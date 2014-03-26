@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<link type="text/css" rel="stylesheet" href="scatter-matrix.css">
+<link type="text/css" rel="stylesheet" href="scatter-matrix/scatter-matrix.css">
 <style>
 
 body {
@@ -23,9 +23,41 @@ body {
 
 </style>
 <body>
+  <input type="file" id="files" name="files[]"/>
+<br>
+<br>
 <script src="http://d3js.org/d3.v3.min.js"></script>
-<script src="scatter-matrix.js"></script>
+<script src="scatter-matrix/scatter-matrix.js"></script>
 <script type="text/javascript">
-  var sm = new ScatterMatrix('data.tsv');
-  sm.render();
+  if (window.File && window.FileReader && window.FileList && window.Blob) {
+    // Great success! All the File APIs are supported.
+  } else {
+    alert('The File APIs are not fully supported in this browser.');
+  }
+
+  function handleFileSelect(evt) {
+    var files = evt.target.files; 
+
+    var reader = new FileReader();
+
+    reader.onload = function() {
+      renderFile(reader.result)
+    };
+
+    for (var i = 0, f; f = files[i]; i++) {
+        if (!f.type.match('text.*')) {
+          continue;
+        }
+        
+        reader.readAsDataURL(f);
+    };
+    
+  }
+
+  document.getElementById('files').addEventListener('change', handleFileSelect, false);
+
+  function renderFile (url) {
+    var sm = new ScatterMatrix(url);
+    sm.render();
+  }
 </script>
