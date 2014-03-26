@@ -37,5 +37,5 @@ circle { fill: #ccc; fill-opacity: .5; }
 .scatter-matrix-filter-control ul { list-style: none; padding-left: 10px; }
 .scatter-matrix-variable-control ul { list-style: none; padding-left: 10px; }
 .scatter-matrix-drill-control ul { list-style: none; padding-left: 10px; }
-.scatter-matrix-control { position: fixed; overflow-y: scroll; top: 0; bottom: 0; background: #ffffff; width: 200px; }
-.scatter-matrix-svg { margin-left: 200px;}
+.scatter-matrix-control { position: fixed; overflow-y: scroll; top: 0; bottom: 0; background: #ffffff; width: 220px; }
+.scatter-matrix-svg { margin-left: 220px;}
